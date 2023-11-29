@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 
 @app.route('/seasons/', defaults={'season': ''})
-@app.route('/seasons/<string:season>', methods=['GET'])
+@app.route('/seasons/<string:season>/', methods=['GET'])
 def getSeasons(season):
     # checks if any value passes in the route.
     if season != '':
@@ -39,7 +39,7 @@ def getSeasons(season):
         return make_response(jsonify(data))
 
 
-@app.route('/seasons', methods=['POST'])
+@app.route('/seasons/', methods=['POST'])
 def postSeasons():
     nameSeason = request.json['season']
     # check if the name of the season was passed through json
@@ -56,6 +56,33 @@ def postSeasons():
         return make_response(jsonify({'message': 'season created successfully.'}), 201)
     else:
         return make_response(jsonify({'error': 'the data in json did not come.'}), 404)
+
+
+@app.route('/teams/', defaults={'season': '', 'teamId': ''}, methods=['GET'])
+@app.route('/teams/<string:season>/', defaults={'teamId': ''}, methods=['GET'])
+@app.route('/teams/<string:season>/<string:teamId>/', methods=['GET'])
+def getTeams(season, teamId):
+    if season:
+        # rescuing all documents within the sub collection team
+        doc_ref = db.collection('seasons').document(season)
+        subcolecao_ref = doc_ref.collection('teams')
+        documentos_subcolecao = subcolecao_ref.stream()
+        # saving the values ​​in the data variable
+        data = []
+        for doc in documentos_subcolecao:
+            data.append(doc.to_dict())
+        # checking if the ID passed in the URL exists and returning an object if the value is valid
+        if teamId:
+            team = None
+            for doc in data:
+                if doc['id'] == teamId:
+                    team = doc
+            # checks if the item exists, and returns the item or error
+            return make_response(jsonify(team)) if team else make_response(jsonify({'error': 'team not found'}), 404)
+        else:
+            return make_response(jsonify(data))
+    else:
+        return make_response(jsonify({'error': 'season not informed by the URL'}), 404)
 
 
 # function that returns date and time DD/MM/YYYY - 00:00
