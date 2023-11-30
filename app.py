@@ -85,6 +85,29 @@ def getTeams(season, teamId):
         return make_response(jsonify({'error': 'season not informed by the URL'}), 404)
 
 
+@app.route('/teams/', defaults={'season': ''}, methods=['POST'])
+@app.route('/teams/<string:season>/', methods=['POST'])
+def postTeams(season):
+    if season:
+        req = request.json
+        if req and type(req) == list:
+            # looping through the teams array, and creating a document in the sub collection with the teams
+            for team in req:
+                teamId = db.collection('seasons').document(
+                    season).collection('teams').add({})[1].id
+
+                team.update({'id': teamId})
+
+                db.collection('seasons').document(season).collection(
+                    'teams').document(teamId).set(team)
+
+            return make_response(jsonify({'messagem': 'successfully created teams'}), 201)
+        else:
+            return make_response(jsonify({'error': 'empty array'}), 404)
+    else:
+        return make_response(jsonify({'error': 'season not specified in route URL'}), 404)
+
+
 # function that returns date and time DD/MM/YYYY - 00:00
 def currentDateTime():
     cDate = datetime.now()
