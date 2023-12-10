@@ -108,6 +108,33 @@ def postTeams(season):
         return make_response(jsonify({'error': 'season not specified in route URL'}), 404)
 
 
+@app.route('/matches/', defaults={'season': '', 'matcheId': ''}, methods=['GET'])
+@app.route('/matches/<string:season>/', defaults={'matcheId': ''}, methods=['GET'])
+@app.route('/matches/<string:season>/<string:matcheId>/', methods=['GET'])
+def getMatches(season, matcheId):
+    if season:
+        # rescuing all documents within the sub collection team
+        doc_ref = db.collection('seasons').document(season)
+        subcollection_ref = doc_ref.collection('matches')
+        documents_subcollection = subcollection_ref.stream()
+        # saving the values ​​in the data variable
+        data = []
+        for doc in documents_subcollection:
+            data.append(doc.to_dict())
+
+        # checking if the ID passed in the URL exists and returning an object if the value is valid
+        if matcheId:
+            for matche in data:
+                if matche['id'] == matcheId:
+                    return make_response(jsonify(matche))
+
+            return make_response(jsonify({'error': 'matche not found'}), 404)
+        else:
+            return make_response(jsonify(data))
+    else:
+        return make_response(jsonify({'error': 'season not present on the route'}), 404)
+
+
 # function that returns date and time DD/MM/YYYY - 00:00
 def currentDateTime():
     cDate = datetime.now()
