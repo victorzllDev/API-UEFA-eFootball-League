@@ -1,4 +1,5 @@
 from flask import Flask, request, make_response, jsonify
+from flask_cors import CORS
 from firebase_admin import initialize_app, credentials, firestore
 from firebaseConfig import FirebaseConfig
 from datetime import datetime
@@ -9,6 +10,7 @@ initialize_app(cred)
 db = firestore.client()
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/seasons/', defaults={'season': ''})
